@@ -1,7 +1,7 @@
 const path = require('path')
 const express = require('express')
 const hbs = require('hbs')
-const geocode = require('./utils/geocode')
+const { geocode, geocodeCurrentLocation } = require('./utils/geocode')
 const forecast = require('./utils/forecast')
 
 
@@ -75,6 +75,36 @@ app.get('/weather', (req, res) => {
                 location,
                 forecast: forecastData.forecast,
                 address: req.query.address
+            })
+        })
+    })
+})
+
+
+
+app.get('/weatherFromCurrentLocation', (req, res) => {
+    const latitude = req.query.latitude
+    const longitude = req.query.longitude
+
+    if (!latitude || !longitude) {
+        return res.send({
+            error: 'Error while fetching current location. Please try again.'
+        })
+    }
+
+    geocodeCurrentLocation(latitude, longitude, (error, { location } = {}) => {
+        if (error) {
+            return res.send({ error })
+        }
+
+        forecast(latitude, longitude, (error, forecastData) => {
+            if (error) {
+                return res.send({ error })
+            }
+
+            res.send({
+                location,
+                forecast: forecastData.forecast
             })
         })
     })
